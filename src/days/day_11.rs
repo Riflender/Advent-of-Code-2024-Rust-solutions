@@ -1,60 +1,38 @@
-use std::time::SystemTime;
-use std::thread;
+use std::collections::HashMap;
 use std::error::Error;
-use std::thread::JoinHandle;
 use crate::utils::read_file;
 
-fn resolution(nb_blinks: usize) -> Result<usize, Box<dyn Error>> {
-    let stones = read_file("src/inputs/input_11.txt")?
+fn blinks(nb_blinks: usize) -> Result<u64, Box<dyn Error>> {
+    let mut stones = read_file("src/inputs/input_11.txt")?
         .split(" ")
-        .map(|x| x.parse::<u64>().unwrap())
-        .collect::<Vec<u64>>();
+        .map(|x| (x.parse::<u64>().unwrap(), 1))
+        .collect::<HashMap<u64, u64>>();
 
-    let threads: Vec<JoinHandle<Result<usize, Box<dyn Error + Send + Sync>>>> = stones.into_iter().map(|x| {
-        thread::spawn(move || { blinks(vec![x], nb_blinks) })
-    }).collect();
+    for _ in 0..nb_blinks {
+        let mut new_stones = HashMap::new();
 
-    Ok(threads
-        .into_iter()
-        .map(|handle| handle.join().unwrap().unwrap())
-        .collect::<Vec<usize>>()
-        .iter()
-        .sum())
-
-    //blinks(stones, nb_blinks)
-}
-
-fn blinks(mut stones: Vec<u64>, nb_blinks: usize) -> Result<usize, Box<dyn Error + Send + Sync>> {
-    let mut previous_time = SystemTime::now();
-    for i in 0..nb_blinks {
-        println!("{i}: {},{}", previous_time.elapsed()?.as_secs(), previous_time.elapsed()?.subsec_nanos());
-        previous_time = SystemTime::now();
-
-        let mut j = 0;
-
-        while j < stones.len() {
-            if stones[j] == 0 { stones[j] = 1; }
-            else if stones[j].to_string().len() % 2 == 0 {
-                let s = stones[j].to_string();
-                stones.insert(j + 1, s.as_str()[s.len() / 2..].parse()?);
-                stones[j] = s.as_str()[..s.len() / 2].parse()?;
-                j += 1;
+        for stone in stones.clone() {
+            if stone.0  == 0 { new_stones.entry(1).and_modify(|e| *e += stone.1).or_insert(stone.1); }
+            else if stone.0.to_string().len() % 2 == 0 {
+                let s = stone.0.to_string();
+                new_stones.entry(s.as_str()[s.len() / 2..].parse()?).and_modify(|e| *e += stones[&stone.0]).or_insert(stones[&stone.0]);
+                new_stones.entry(s.as_str()[..s.len() / 2].parse()?).and_modify(|e| *e += stones[&stone.0]).or_insert(stones[&stone.0]);
             }
-            else { stones[j] = stones[j] * 2024; }
-
-            j += 1;
+            else { new_stones.entry(stone.0 * 2024).and_modify(|e| *e += stone.1).or_insert(stone.1); }
         }
+
+        stones = new_stones;
     }
 
-    Ok(stones.len())
+    Ok(stones.values().sum())
 }
 
 #[allow(dead_code)]
-pub fn part_1() -> Result<usize, Box<dyn Error>> {
-    resolution(25)
+pub fn part_1() -> Result<u64, Box<dyn Error>> {
+    blinks(25)
 }
 
 #[allow(dead_code)]
-pub fn part_2() -> Result<usize, Box<dyn Error>> {
-    resolution(75)
+pub fn part_2() -> Result<u64, Box<dyn Error>> {
+    blinks(75)
 }

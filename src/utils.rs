@@ -52,6 +52,18 @@ where P: AsRef<Path>, {
     Ok((vec1, vec2))
 }
 
+pub fn iterate_on_lines_batch<P, R>(filename: P, batch_size: usize, f: &mut dyn Fn(&[String]) -> Result<R, Box<dyn Error>>) -> Result<Vec<R>, Box<dyn Error>>
+where P: AsRef<Path>, {
+    let lines = read_lines(filename)?;
+    let mut vec = Vec::new();
+
+    for batch in lines.flatten().collect::<Vec<String>>().chunks(batch_size) {
+        vec.push(f(batch)?);
+    }
+
+    Ok(vec)
+}
+
 pub fn file_to_bytes<P>(filename: P) -> Result<Vec<Vec<u8>>, Box<dyn Error>>
 where P: AsRef<Path>, {
     Ok(read_lines(filename)?.flatten().map(|x| x.into_bytes()).collect())
