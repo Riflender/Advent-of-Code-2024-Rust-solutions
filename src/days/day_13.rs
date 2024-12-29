@@ -1,12 +1,14 @@
 use std::error::Error;
-use simplex::{Simplex, SimplexConstraint, SimplexOutput};
+// use simplex::{Simplex, SimplexConstraint, SimplexOutput};
 use crate::utils::iterate_on_lines_batch;
 
+#[allow(dead_code)]
 struct Coords<T> {
     x: T,
     y: T,
 }
 
+#[allow(dead_code)]
 struct Machine {
     button_a: Coords<u8>,
     button_b: Coords<u8>,
@@ -27,6 +29,9 @@ fn parse_batch(batch: &[String]) -> Result<Machine, Box<dyn Error>> {
 pub fn part_1() -> Result<usize, Box<dyn Error>> {
     let _batch = iterate_on_lines_batch("src/inputs/input_13.txt", 4, &mut parse_batch)?;
 
+    /*
+    https://cbom.atozmath.com/CBOM/Simplex.aspx?q=sm
+
     let mut problem = Simplex::minimize(&vec![3.0, 1.0]).with(vec![
         SimplexConstraint::Equal(vec![94.0, 22.0], 8400.0),
         SimplexConstraint::Equal(vec![34.0, 67.0], 5400.0),
@@ -38,8 +43,9 @@ pub fn part_1() -> Result<usize, Box<dyn Error>> {
         SimplexOutput::NoSolution => println!("NoSolution"),
     }
 
-    //let mut simplex = problem.solve();
-    //println!("{:?}", problem);
+    let mut simplex = problem.solve();
+    println!("{:?}", problem);
+    */
 
     Ok(0)
 }

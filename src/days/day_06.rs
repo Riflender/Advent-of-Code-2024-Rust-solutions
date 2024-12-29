@@ -1,23 +1,5 @@
 use std::error::Error;
-use crate::utils::file_to_chars;
-
-enum Direction {
-    Up,
-    Right,
-    Down,
-    Left
-}
-
-impl Direction {
-    pub fn next(&mut self) -> (isize, isize) {
-        match self {
-            Direction::Up =>    { *self = Direction::Right; (0, 1) }
-            Direction::Right => { *self = Direction::Down; (1, 0) }
-            Direction::Down =>  { *self = Direction::Left; (0, -1) }
-            Direction::Left =>  { *self = Direction::Up; (-1, 0) }
-        }
-    }
-}
+use crate::utils::{file_to_chars, Direction};
 
 #[allow(dead_code)]
 pub fn part_1() -> Result<usize, Box<dyn Error>> {
