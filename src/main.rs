@@ -60,7 +60,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     //println!("Day 18, part 2 : {}", day_18::part_2()?);
 
     //println!("Day 19, part 1 : {}", day_19::part_1()?);
-    println!("Day 19, part 2 : {}", day_19::part_2()?);
+    //println!("Day 19, part 2 : {}", day_19::part_2()?);
+
+    //println!("Day 20, part 1 : {}", day_20::part_1()?);
+    //println!("Day 20, part 2 : {}", day_20::part_2()?);
+
+    println!("Day 21, part 1 : {}", day_21::part_1()?);
+    //println!("Day 21, part 2 : {}", day_21::part_2()?);
 
     Ok(())
 }
