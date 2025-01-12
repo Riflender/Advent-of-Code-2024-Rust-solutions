@@ -47,8 +47,8 @@ fn sort(rules: &Vec<(u8, u8)>, update: &mut Vec<u8>) -> Vec<u8> {
 pub fn part_1() -> Result<usize, Box<dyn Error>> {
     let (rules, updates) = iterate_on_lines_2(
         "src/inputs/input_05.txt",
-        &mut parse_line_1,
-        &mut parse_line_2
+        &parse_line_1,
+        &parse_line_2
     )?;
     let mut middle = Vec::new();
 
@@ -63,8 +63,8 @@ pub fn part_1() -> Result<usize, Box<dyn Error>> {
 pub fn part_2() -> Result<usize, Box<dyn Error>> {
     let (rules, updates) = iterate_on_lines_2(
         "src/inputs/input_05.txt",
-        &mut parse_line_1,
-        &mut parse_line_2
+        &parse_line_1,
+        &parse_line_2
     )?;
     let mut middle = Vec::new();
 

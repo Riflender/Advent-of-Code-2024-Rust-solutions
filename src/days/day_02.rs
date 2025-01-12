@@ -7,7 +7,7 @@ fn parse_line(line: &str) -> Result<Vec<i8>, Box<dyn Error>> {
 
 #[allow(dead_code)]
 pub fn part_1() -> Result<u32, Box<dyn Error>> {
-    let lines = iterate_on_lines("src/inputs/input_02.txt", &mut parse_line)?;
+    let lines = iterate_on_lines("src/inputs/input_02.txt", &parse_line)?;
     let mut safe = 0;
 
     for line in lines {

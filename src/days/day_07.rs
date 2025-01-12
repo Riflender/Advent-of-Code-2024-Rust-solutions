@@ -15,7 +15,7 @@ fn parse_line(line: &str) -> Result<(u64, Vec<u16>), Box<dyn Error>> {
 
 #[allow(dead_code)]
 pub fn part_1() -> Result<u64, Box<dyn Error>> {
-    let lines = iterate_on_lines("src/inputs/input_07.txt", &mut parse_line)?;
+    let lines = iterate_on_lines("src/inputs/input_07.txt", &parse_line)?;
     let mut res = 0;
 
     for line in lines {
@@ -70,7 +70,7 @@ fn concatenate(x: u64, y: u64) -> u64 {
 
 #[allow(dead_code)]
 pub fn part_2() -> Result<u64, Box<dyn Error>> {
-    let lines = iterate_on_lines("src/inputs/input_07.txt", &mut parse_line)?;
+    let lines = iterate_on_lines("src/inputs/input_07.txt", &parse_line)?;
     let mut res = 0;
 
     for line in lines.clone() {

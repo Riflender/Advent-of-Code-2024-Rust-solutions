@@ -41,7 +41,7 @@ fn parse_line(line: &str) -> Result<(isize, isize, isize, isize), Box<dyn Error>
 
 #[allow(dead_code)]
 pub fn part_1() -> Result<usize, Box<dyn Error>> {
-    let robots = iterate_on_lines("src/inputs/input_14.txt", &mut parse_line)?;
+    let robots = iterate_on_lines("src/inputs/input_14.txt", &parse_line)?;
     let width = 101;
     let height = 103;
 
@@ -61,7 +61,7 @@ pub fn part_1() -> Result<usize, Box<dyn Error>> {
 
 #[allow(dead_code)]
 pub fn part_2() -> Result<usize, Box<dyn Error>> {
-    let mut robots = iterate_on_lines("src/inputs/input_14.txt", &mut parse_line)?;
+    let mut robots = iterate_on_lines("src/inputs/input_14.txt", &parse_line)?;
     let width = 101;
     let height = 103;
 

@@ -13,7 +13,11 @@ pub fn read_lines<P: AsRef<Path>>(filename: P) -> io::Result<io::Lines<io::BufRe
     Ok(io::BufReader::new(file).lines())
 }
 
-pub fn iterate_on_lines<P: AsRef<Path>, R>(filename: P, f: &mut dyn Fn(&str) -> Result<R, Box<dyn Error>>) -> Result<Vec<R>, Box<dyn Error>> {
+pub fn iterate_on_lines<P, F, R>(filename: P, f: F) -> Result<Vec<R>, Box<dyn Error>>
+where
+    P: AsRef<Path>,
+    F: Fn(&str) -> Result<R, Box<dyn Error>>,
+{
     let lines = read_lines(filename)?;
     let mut vec = Vec::new();
 
@@ -25,11 +29,16 @@ pub fn iterate_on_lines<P: AsRef<Path>, R>(filename: P, f: &mut dyn Fn(&str) -> 
     Ok(vec)
 }
 
-pub fn iterate_on_lines_2<P: AsRef<Path>, R, S>(
+pub fn iterate_on_lines_2<P, F, G, R, S>(
     filename: P,
-    f1: &mut dyn Fn(&str) -> Result<R, Box<dyn Error>>,
-    f2: &mut dyn Fn(&str) -> Result<S, Box<dyn Error>>
-) -> Result<(Vec<R>, Vec<S>), Box<dyn Error>> {
+    f1: F,
+    f2: G
+) -> Result<(Vec<R>, Vec<S>), Box<dyn Error>>
+where
+    P: AsRef<Path>,
+    F: Fn(&str) -> Result<R, Box<dyn Error>>,
+    G: Fn(&str) -> Result<S, Box<dyn Error>>,
+{
     let lines = read_lines(filename)?;
     let mut vec1 = Vec::new();
     let mut vec2 = Vec::new();

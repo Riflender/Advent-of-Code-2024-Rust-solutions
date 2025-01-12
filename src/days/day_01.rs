@@ -12,7 +12,7 @@ fn parse_line(line: &str) -> Result<(i32, i32), Box<dyn Error>> {
 
 #[allow(dead_code)]
 pub fn part_1() -> Result<i32, Box<dyn Error>> {
-    let lines = iterate_on_lines("src/inputs/input_01.txt", &mut parse_line)?;
+    let lines = iterate_on_lines("src/inputs/input_01.txt", &parse_line)?;
 
     let (mut left, mut right): (Vec<i32>, Vec<i32>) = lines.into_iter().unzip();
     left.sort();
@@ -28,7 +28,7 @@ pub fn part_1() -> Result<i32, Box<dyn Error>> {
 
 #[allow(dead_code)]
 pub fn part_2() -> Result<i32, Box<dyn Error>> {
-    let lines = iterate_on_lines("src/inputs/input_01.txt", &mut parse_line)?;
+    let lines = iterate_on_lines("src/inputs/input_01.txt", &parse_line)?;
 
     let (left, right): (Vec<i32>, Vec<i32>) = lines.into_iter().unzip();
 
