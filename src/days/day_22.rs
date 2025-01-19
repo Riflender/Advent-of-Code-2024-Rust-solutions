@@ -1,3 +1,4 @@
+use std::collections::{HashMap, VecDeque};
 use std::error::Error;
 use crate::utils::iterate_on_lines;
 
@@ -65,17 +66,30 @@ pub fn part_2() -> Result<u128, Box<dyn Error>> {
 
     let mut all_secrets = Vec::new();
     for mut line in lines {
-        let mut secrets = Vec::new();
-        secrets.push(((line % 10) as i8, -10_i8));
+        let mut hash_secrets = HashMap::new();
+        hash_secrets.insert((-10_i8, -10_i8, -10_i8, -10_i8), (line % 10) as i8);
+
+        let mut queue = VecDeque::with_capacity(4);
+        let mut previous_line = (line % 10) as i8;
 
         for _ in 0..2000 {
             line = next_secret(line);
             let price = (line % 10) as i8;
-            let (x, _) = secrets.last().expect("Vec should not be empty");
-            secrets.push((price, price - x.clone()));
+
+            if queue.capacity() == queue.len() { queue.pop_front(); }
+            queue.push_back(price - previous_line);
+
+            if let Some(sl) = queue.make_contiguous().windows(4).next() {
+                let tmp = (sl[0], sl[1], sl[2], sl[3]);
+                if let None = hash_secrets.get(&tmp) {
+                    hash_secrets.insert(tmp, price);
+                }
+            }
+
+            previous_line = price;
         }
 
-        all_secrets.push(secrets);
+        all_secrets.push(hash_secrets);
     }
 
     let mut sequence = Sequence::new();
@@ -86,20 +100,18 @@ pub fn part_2() -> Result<u128, Box<dyn Error>> {
         let mut tmp_res = 0;
 
         for secrets in all_secrets.clone() {
-            //let mut queue = VecDeque::with_capacity(4);
-            for secret in secrets.windows(4) {
-                if sequence.0 == (secret[0].1, secret[1].1, secret[2].1, secret[3].1) {
-                    tmp_res += secret[3].0 as u128;
-                    break;
-                }
+            if let Some(price) = secrets.get(&sequence.0) {
+                tmp_res += *price as u128;
             }
         }
 
         if tmp_res > res.1 {
             res = (sequence, tmp_res);
         }
+
         sequence.next();
     }
 
+    println!("{:?}", res.0);
     Ok(res.1)
 }
