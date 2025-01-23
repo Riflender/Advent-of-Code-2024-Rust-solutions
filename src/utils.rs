@@ -58,7 +58,11 @@ where
     Ok((vec1, vec2))
 }
 
-pub fn iterate_on_lines_batch<P: AsRef<Path>, R>(filename: P, batch_size: usize, f: &mut dyn Fn(&[String]) -> Result<R, Box<dyn Error>>) -> Result<Vec<R>, Box<dyn Error>> {
+pub fn iterate_on_lines_batch<P: AsRef<Path>, R>(
+    filename: P,
+    batch_size: usize,
+    f: &mut dyn Fn(&[String]) -> Result<R, Box<dyn Error>>
+) -> Result<Vec<R>, Box<dyn Error>> {
     let lines = read_lines(filename)?;
     let mut vec = Vec::new();
 

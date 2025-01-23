@@ -1,14 +1,17 @@
 use std::error::Error;
 use crate::utils::{file_to_chars, Direction};
 
+const START_GUARD: (isize, isize) = (80, 79);
+const START_DIRECTION: Direction = Direction::Up;
+
 #[allow(dead_code)]
 pub fn part_1() -> Result<usize, Box<dyn Error>> {
     let mut lines = file_to_chars("src/inputs/input_06.txt")?;
 
-    let n = 130;
-    let mut guard = (80, 79);
-    let mut direction = Direction::Up;
-    let mut forward: (isize, isize) = (-1, 0);
+    let n = lines.len();
+    let mut guard = START_GUARD;
+    let mut direction = START_DIRECTION;
+    let mut forward: (isize, isize) = (&direction).into();
 
     let mut next = (guard.0 + forward.0, guard.1 + forward.1);
 

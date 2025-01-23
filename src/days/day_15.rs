@@ -4,6 +4,61 @@ use std::collections::VecDeque;
 use std::fmt::Debug;
 use crate::utils::{file_to_iter_chars_than_lines, Direction};
 
+fn parse_line(line: &str) -> Result<Vec<Direction>, Box<dyn Error>> {
+    Ok(line.chars().map(|x| Direction::try_from(x).unwrap()).collect())
+}
+
+fn forward(dir: &Direction, coord: &(usize, usize)) -> (usize, usize) {
+    let t: (isize, isize) = dir.into();
+    ((coord.0 as isize + t.0) as usize, (coord.1 as isize + t.1) as usize)
+}
+
+fn recursive_move(dir: &Direction, map: &mut Vec<Vec<char>>, coord: (usize, usize)) -> (usize, usize) {
+    let forward = forward(dir, &coord);
+
+    let f = |m: &mut Vec<Vec<char>>| {
+        m[forward.0][forward.1] = m[coord.0][coord.1];
+        m[coord.0][coord.1] = '.';
+        forward
+    };
+
+    match map[forward.0][forward.1] {
+        '.' => f(map),
+        '#' => coord,
+        _ => { if recursive_move(dir, map, forward) != forward { f(map) } else { coord } }
+    }
+}
+
+#[allow(dead_code)]
+pub fn part_1() -> Result<usize, Box<dyn Error>> {
+    let (mut map, directions) = file_to_iter_chars_than_lines("src/inputs/input_15.txt", &mut parse_line)?;
+    let n = map.len();
+
+    let mut robot = (0, 0);
+    for i in 0..n {
+        for j in 0..n {
+            if map[i][j] == '@' {
+                robot = (i, j);
+                break;
+            }
+        }
+        if robot != (0, 0) { break; }
+    }
+
+    for d in directions.into_iter() {
+        robot = recursive_move(&d, &mut map, robot);
+    }
+
+    let mut res = 0;
+    for i in 0..n {
+        for j in 0..n {
+            if map[i][j] == 'O' { res += 100 * i + j; }
+        }
+    }
+
+    Ok(res)
+}
+
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
 struct BinaryTree<'a, T>
 where T: Clone {
@@ -87,31 +142,6 @@ impl BinaryTree<'_, (char, (usize, usize))> {
     }
 }
 
-fn parse_line(line: &str) -> Result<Vec<Direction>, Box<dyn Error>> {
-    Ok(line.chars().map(|x| Direction::try_from(x).unwrap()).collect())
-}
-
-fn forward(dir: &Direction, coord: &(usize, usize)) -> (usize, usize) {
-    let t: (isize, isize) = dir.into();
-    ((coord.0 as isize + t.0) as usize, (coord.1 as isize + t.1) as usize)
-}
-
-fn recursive_move(dir: &Direction, map: &mut Vec<Vec<char>>, coord: (usize, usize)) -> (usize, usize) {
-    let forward = forward(dir, &coord);
-
-    let f = |m: &mut Vec<Vec<char>>| {
-        m[forward.0][forward.1] = m[coord.0][coord.1];
-        m[coord.0][coord.1] = '.';
-        forward
-    };
-
-    match map[forward.0][forward.1] {
-        '.' => f(map),
-        '#' => coord,
-        _ => { if recursive_move(dir, map, forward) != forward { f(map) } else { coord } }
-    }
-}
-
 fn build_tree<'a>(dir: &Direction, map: &mut Vec<Vec<char>>, coord: (usize, usize)) -> BinaryTree<'a, (char, (usize, usize))> {
     let mut node = BinaryTree::new((map[coord.0][coord.1], coord));
     if map[coord.0][coord.1] == '.' || map[coord.0][coord.1] == '#' { return node }
@@ -155,36 +185,6 @@ fn vertical_move(dir: &Direction, map: &mut Vec<Vec<char>>, coord: (usize, usize
     bt.prune_duplicate();
     move_tree(dir, map, &bt);
     forward(dir, &coord)
-}
-
-#[allow(dead_code)]
-pub fn part_1() -> Result<usize, Box<dyn Error>> {
-    let (mut map, directions) = file_to_iter_chars_than_lines("src/inputs/input_15.txt", &mut parse_line)?;
-    let n = map.len();
-
-    let mut robot = (0, 0);
-    for i in 0..n {
-        for j in 0..n {
-            if map[i][j] == '@' {
-                robot = (i, j);
-                break;
-            }
-        }
-        if robot != (0, 0) { break; }
-    }
-
-    for d in directions.into_iter() {
-        robot = recursive_move(&d, &mut map, robot);
-    }
-
-    let mut res = 0;
-    for i in 0..n {
-        for j in 0..n {
-            if map[i][j] == 'O' { res += 100 * i + j; }
-        }
-    }
-
-    Ok(res)
 }
 
 #[allow(dead_code)]

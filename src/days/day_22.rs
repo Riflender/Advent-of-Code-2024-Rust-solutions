@@ -1,5 +1,8 @@
 use std::collections::{HashMap, VecDeque};
 use std::error::Error;
+use std::sync::{Arc, RwLock};
+use std::sync::mpsc::channel;
+use threadpool::ThreadPool;
 use crate::utils::iterate_on_lines;
 
 fn parse_line(line: &str) -> Result<usize, Box<dyn Error>> {
@@ -36,6 +39,11 @@ impl Sequence {
         Sequence((-9, -9, -9, -9))
     }
 
+    fn new_with_last(last: i8) -> Self {
+        if last < -9 || last > 9 { panic!(); }
+        Sequence((-9, -9, -9, last))
+    }
+
     fn next(&mut self) {
         match self.0 {
             (9, 9, 9, 9) => self.0 = (-9, -9, -9, -9),
@@ -61,8 +69,8 @@ impl Sequence {
 
 #[allow(dead_code)]
 pub fn part_2() -> Result<u128, Box<dyn Error>> {
-    // let lines = iterate_on_lines("src/inputs/input_22.txt", parse_line)?;
-    let lines = vec![1, 2, 3, 2024];
+    let lines = iterate_on_lines("src/inputs/input_22.txt", parse_line)?;
+    // let lines = vec![1, 2, 3, 2024];
 
     let mut all_secrets = Vec::new();
     for mut line in lines {
@@ -91,27 +99,45 @@ pub fn part_2() -> Result<u128, Box<dyn Error>> {
 
         all_secrets.push(hash_secrets);
     }
+    let all_secrets_ptr = Arc::new(RwLock::new(all_secrets));
 
-    let mut sequence = Sequence::new();
-    let mut res = (Sequence::new(), 0);
+    let pool = ThreadPool::new(8);
+    let (tx, rx) = channel();
 
-    for i in 0..19_usize.pow(4) {
-        // if i % 19_usize.pow(3) == 0 { println!("{:?}", sequence); }
-        let mut tmp_res = 0;
+    for d in -9..10 {
+        let tx = tx.clone();
+        let all_secrets_ptr_clone = all_secrets_ptr.clone();
+        pool.execute(move || {
+            let mut sequence = Sequence::new_with_last(d);
+            let mut res = (Sequence::new(), 0);
 
-        for secrets in all_secrets.clone() {
-            if let Some(price) = secrets.get(&sequence.0) {
-                tmp_res += *price as u128;
+            for i in 0..19_usize.pow(3) {
+                if i % 19_usize.pow(2) == 0 { println!("{:?}", sequence); }
+                let mut tmp_res = 0;
+
+                for secrets in all_secrets_ptr_clone.read().expect("RwLock poisoned").clone() {
+                    if let Some(price) = secrets.get(&sequence.0) {
+                        tmp_res += *price as u128;
+                    }
+                }
+
+                if tmp_res > res.1 {
+                    res = (sequence, tmp_res);
+                }
+
+                sequence.next();
             }
-        }
 
-        if tmp_res > res.1 {
-            res = (sequence, tmp_res);
-        }
-
-        sequence.next();
+            tx.send(res).expect("channel will be there waiting for the pool");
+        });
     }
 
-    println!("{:?}", res.0);
+    let mut res = (Sequence::new(), 0);
+    for (seq, most) in rx.iter().take(19) {
+        if most > res.1 { res = (seq, most) }
+    }
+
+    // (2, 0, -1, 2) --> 1998
+    println!("\n{:?}", res.0);
     Ok(res.1)
 }
