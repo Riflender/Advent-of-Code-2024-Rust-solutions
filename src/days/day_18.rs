@@ -11,10 +11,9 @@ fn parse_line(line: &str) -> Result<(usize, usize), Box<dyn Error>> {
 
 #[allow(dead_code)]
 pub fn part_1() -> Result<usize, Box<dyn Error>> {
-    let lines = iterate_on_lines("src/inputs/input_18.txt", parse_line)?;
-    let n = 71;
+    let lines = &iterate_on_lines("src/inputs/input_18.txt", parse_line)?[..1024];
     /*
-    let lines = vec![
+    let lines = &vec![
         (5, 4),
         (4, 2),
         (4, 5),
@@ -40,12 +39,23 @@ pub fn part_1() -> Result<usize, Box<dyn Error>> {
         (0, 5),
         (1, 6),
         (2, 0)
-    ];
-    let n = 7;
+    ][..12];
     */
 
+    let n = {
+        let mut tmp = 0;
+        for (x, y) in lines {
+            if x > &tmp { tmp = *x; }
+            if y > &tmp { tmp = *y; }
+        }
+        tmp + 1
+    };
     let mut grid = vec![vec!['.'; n]; n];
-    for (x, y) in lines { grid[y][x] = '#'; }
+    for (x, y) in lines { grid[*y][*x] = '#'; }
+
+    for line in grid {
+        println!("{}", line.iter().collect::<String>());
+    }
 
     Ok(0)
 }

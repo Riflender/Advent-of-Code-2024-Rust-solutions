@@ -1,7 +1,7 @@
 use std::error::Error;
-// use std::{thread, time};
-use std::collections::VecDeque;
+use std::collections::{HashSet, VecDeque};
 use std::fmt::Debug;
+use std::hash::Hash;
 use crate::utils::{file_to_iter_chars_than_lines, Direction};
 
 fn parse_line(line: &str) -> Result<Vec<Direction>, Box<dyn Error>> {
@@ -32,9 +32,10 @@ fn recursive_move(dir: &Direction, map: &mut Vec<Vec<char>>, coord: (usize, usiz
 #[allow(dead_code)]
 pub fn part_1() -> Result<usize, Box<dyn Error>> {
     let (mut map, directions) = file_to_iter_chars_than_lines("src/inputs/input_15.txt", &mut parse_line)?;
-    let n = map.len();
 
+    let n = map.len();
     let mut robot = (0, 0);
+
     for i in 0..n {
         for j in 0..n {
             if map[i][j] == '@' {
@@ -58,6 +59,8 @@ pub fn part_1() -> Result<usize, Box<dyn Error>> {
 
     Ok(res)
 }
+
+
 
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
 struct BinaryTree<'a, T>
@@ -103,7 +106,8 @@ impl<'a, T: Clone + PartialEq + Debug> BinaryTree<'a, T> {
         }
     }
 
-    fn prune_duplicate(&self) {
+    fn breadth_first(&self) -> HashSet<T>
+    where T: Hash + Eq, {
         let mut queue= VecDeque::new();
         let mut marked_queue = VecDeque::new();
 
@@ -112,7 +116,6 @@ impl<'a, T: Clone + PartialEq + Debug> BinaryTree<'a, T> {
 
         while !queue.is_empty() {
             let tmp = queue.pop_front().unwrap();
-            // println!("{}", tmp);
 
             if let Some(l) = tmp.left {
                 if !marked_queue.contains(&*l) {
@@ -128,7 +131,8 @@ impl<'a, T: Clone + PartialEq + Debug> BinaryTree<'a, T> {
             }
         }
 
-        println!("{:?}", marked_queue);
+        // println!("{:?}", marked_queue);
+        marked_queue.into_iter().map(|x| x.element).collect::<HashSet<T>>()
     }
 }
 
@@ -163,37 +167,51 @@ fn build_tree<'a>(dir: &Direction, map: &mut Vec<Vec<char>>, coord: (usize, usiz
     node
 }
 
-fn move_tree(dir: &Direction, map: &mut Vec<Vec<char>>, tree: &BinaryTree<(char, (usize, usize))>) {
-    if let Some(l) = tree.to_owned().left {
-        move_tree(dir, map, &*l)
+fn move_tree(dir: &Direction, map: &mut Vec<Vec<char>>, tree: HashSet<(char, (usize, usize))>) {
+    let mut t = tree.into_iter().map(|x| x.1).collect::<Vec<(usize, usize)>>();
+    match dir {
+        Direction::Up => t.sort(),
+        Direction::Down => t.sort_by(|x, y| y.cmp(x)),
+        _ => panic!(),
     }
-    if let Some(r) = tree.to_owned().right {
-        move_tree(dir, map, &*r)
+
+    for coord in t {
+        if map[coord.0][coord.1] == '.' { continue; }
+        let forward = forward(dir, &coord);
+        map[forward.0][forward.1] = map[coord.0][coord.1];
+        map[coord.0][coord.1] = '.';
     }
-    if (tree.to_owned().left, tree.to_owned().right) == (None, None) { return }
-
-    let coord = tree.to_owned().element.1;
-    let forward = forward(dir, &coord);
-
-    map[forward.0][forward.1] = map[coord.0][coord.1];
-    map[coord.0][coord.1] = '.';
 }
 
 fn vertical_move(dir: &Direction, map: &mut Vec<Vec<char>>, coord: (usize, usize)) -> (usize, usize) {
     let bt = build_tree(dir, map, coord);
     if bt.clone().wall_inside() { return coord }
-    bt.prune_duplicate();
-    move_tree(dir, map, &bt);
+
+    let hs = bt.breadth_first();
+    move_tree(dir, map, hs);
+
     forward(dir, &coord)
+}
+
+#[allow(dead_code)]
+fn print_map(dir: &Direction, iteration: usize, map: &Vec<Vec<char>>, robot: &(usize, usize)) {
+    print!("{}[2J", 27 as char);
+    let c: char = dir.into();
+    println!("Move {:?}:", (iteration, c));
+    let mut clone = map.clone();
+    clone[robot.0][robot.1] = c;
+    for tiles in clone { println!("{}", tiles.iter().collect::<String>()) }
+    println!();
 }
 
 #[allow(dead_code)]
 pub fn part_2() -> Result<usize, Box<dyn Error>> {
     let (map, directions) = file_to_iter_chars_than_lines("src/inputs/input_15.txt", &mut parse_line)?;
-    let m = map.len();
 
+    let m = map.len();
     let mut new_map = Vec::new();
     let mut robot = (0, 0);
+
     for i in 0..m {
         new_map.push(Vec::new());
         let last = new_map.last_mut().ok_or("")?;
@@ -209,25 +227,13 @@ pub fn part_2() -> Result<usize, Box<dyn Error>> {
     }
     let n = new_map[0].len();
 
-    for d in directions.into_iter().enumerate() {
-        /*
-        if d.0 >= 2237 {
-            print!("{}[2J", 27 as char);
-            let c = <Direction as Into<char>>::into(d.1.clone());
-            println!("Move {:?}:", (d.0, c));
-            let mut clone = new_map.clone();
-            clone[robot.0][robot.1] = c;
-            for tiles in clone { println!("{}", tiles.iter().collect::<String>()) }
-            println!();
-        }
-        */
+    for (_i, d) in directions.into_iter().enumerate() {
+        // if _i >= 2237 { print_map(&d, _i, &new_map, &robot); }
 
-        match d.1 {
-            Direction::Right | Direction::Left => robot = recursive_move(&d.1, &mut new_map, robot),
-            Direction::Up | Direction::Down => robot = vertical_move(&d.1, &mut new_map, robot),
+        match d {
+            Direction::Right | Direction::Left => robot = recursive_move(&d, &mut new_map, robot),
+            Direction::Up | Direction::Down => robot = vertical_move(&d, &mut new_map, robot),
         }
-
-        // if d.0 >= 2237 { thread::sleep(time::Duration::from_millis(2500)) };
     }
 
     let mut res = 0;

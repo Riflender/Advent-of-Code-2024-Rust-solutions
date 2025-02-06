@@ -1,4 +1,3 @@
-use std::char::ParseCharError;
 use std::error::Error;
 use std::fs::{read_to_string, File};
 use std::io::{self, BufRead};
@@ -108,7 +107,7 @@ pub fn file_to_iter_chars_than_lines<P: AsRef<Path>, R>(
     Ok((vec1, vec2))
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub enum Direction {
     Up,
     Right,
@@ -128,7 +127,7 @@ impl Direction {
 }
 
 impl TryFrom<char> for Direction {
-    type Error = ParseCharError;
+    type Error = Box<dyn Error>;
 
     fn try_from(value: char) -> Result<Self, Self::Error> {
         match value {
@@ -136,12 +135,23 @@ impl TryFrom<char> for Direction {
             '>' => Ok(Direction::Right),
             'v' => Ok(Direction::Down),
             '<' => Ok(Direction::Left),
-            _ => panic!("Direction wrongly parsed from char")
+            _ => Err(Box::from("NotADirectionChar"))
         }
     }
 }
 
 impl Into<char> for Direction {
+    fn into(self) -> char {
+        match self {
+            Direction::Up => '^',
+            Direction::Right => '>',
+            Direction::Down => 'v',
+            Direction::Left => '<',
+        }
+    }
+}
+
+impl Into<char> for &Direction {
     fn into(self) -> char {
         match self {
             Direction::Up => '^',
